@@ -1,6 +1,8 @@
 //import { Suspense } from 'react';
 import useStateWithLocalStorage from '../../hooks/useStateWithLocalStorage.jsx';
 import { Link } from 'react-router-dom';
+import React from 'react';
+import Modal from 'react-modal';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@mdi/react';
 import {
@@ -25,6 +27,9 @@ import alertConfig from './alert-config.js';
 import IntersectionObserverWrapper from './intersection-observer-wrapper.js';
 
 import './index.css';
+
+import Settings from './settings.js';
+Modal.setAppElement('#root');
 
 // automatically selects the alert color
 const alertColor = alertConfig.alertColors[alertConfig.alertLevel];
@@ -67,10 +72,24 @@ const Menu = () => {
 
     const { data: bosses } = useBossesData();
 
+    const [modalIsOpen, setIsOpen] = React.useState(false);
+
+    function openModal() {
+      setIsOpen(true);
+    }
+  
+    function afterOpenModal() {
+      // references are now sync'd and can be accessed.
+    }
+  
+    function closeModal() {
+      setIsOpen(false);
+    }
+
     return (
         <>
             {/* ALERT BANNER SECTION */}
-            {alertConfig?.alertEnabled && alertConfig.alertEnabled === true && (
+            {/* {alertConfig?.alertEnabled && alertConfig.alertEnabled === true && (
                 <Box>
                 <Collapse in={open}>
                     <Alert
@@ -106,15 +125,12 @@ const Menu = () => {
                     </Alert>
                 </Collapse>
             </Box>
-            )}
+            )} */}
             {/* END ALERT BANNER SECTION */}
             <nav key="main-navigation" className="navigation">
                 <ul className={`menu`}>
-                <IntersectionObserverWrapper>
-                    <li key="menu-home" data-targetid="home" className="overflow-member">
-                        <Link className="branding" to="/">
-                        {/* Tarkov.dev */}
-                        <img
+                <li key="menu-home" data-targetid="home" className="overflow-member">
+                    <img
                             alt="Tarkov.dev"
                             height={30}
                             width={186}
@@ -122,22 +138,27 @@ const Menu = () => {
                             className={'logo-padding'}
                             loading="lazy"
                         />
-                    </Link>
+                    {/* <Link className="branding" to="/">
+                    </Link> */}
                     </li>
-                    <li className="submenu-wrapper overflow-member"  key="menu-settings" data-targetid="settings">
-                        <Link
-                            aria-label="Settings"
-                            to="/settings/"
-                            //onClick={setIsOpen.bind(this, false)}
-                        >
-                            <Icon
+                    <li id="setting" className="submenu-wrapper overflow-member"  key="menu-settings" data-targetid="settings" onClick={openModal}>
+                        <Icon
                                 path={mdiCogOutline}
                                 size={1}
                                 className="icon-with-text"
-                            />
-                        </Link>
+                        />
                     </li>
-                    <li className="submenu-wrapper overflow-member"  key="menu-remote" data-targetid="remote">
+                    <Modal
+                        isOpen={modalIsOpen}
+                        onAfterOpen={afterOpenModal}
+                        onRequestClose={closeModal}
+                        contentLabel="Settings Modal"
+                        className="Modal"
+                        overlayClassName="Overlay"
+                    >
+                        <Settings closeModal={closeModal}></Settings>
+                    </Modal>
+                    {/* <li className="submenu-wrapper overflow-member"  key="menu-remote" data-targetid="remote">
                         <Link
                             aria-label="Remote control"
                             to="/control/"
@@ -151,7 +172,7 @@ const Menu = () => {
                         <ul style={{left: -20}} className="overflow-hidden">
                             {getAmmoMenu()}
                         </ul>
-                    </li>
+                    </li> */}
                     <li className="submenu-wrapper submenu-items overflow-member" key="menu-maps" data-targetid="maps">
                         <Link to="/maps/">{t('Maps')}</Link>
                         <ul style={{left: -40}}>
@@ -183,7 +204,7 @@ const Menu = () => {
                             />
                         </ul>
                     </li>
-                    <li className="submenu-wrapper submenu-items overflow-member" key="menu-items" data-targetid="items">
+                    {/* <li className="submenu-wrapper submenu-items overflow-member" key="menu-items" data-targetid="items">
                         <Link to="/items/">{t('Items')}</Link>
                         <ul className="overflow-hidden">
                             {categoryPages.map((categoryPage) => (
@@ -316,8 +337,7 @@ const Menu = () => {
                         >
                             {t('API')}
                         </Link>
-                    </li>
-                </IntersectionObserverWrapper>
+                    </li> */}
                 </ul>
             </nav>
         </>

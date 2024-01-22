@@ -1,5 +1,6 @@
 import * as critical from "critical";
 
+process.exit(0)
 critical.generate({
     base: 'build/',
     src: './index.html',

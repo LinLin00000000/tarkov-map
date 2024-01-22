@@ -10,6 +10,16 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 
 import ScrollToTop from './components/scroll-to-top/index.js';
 
+import './inject.js';
+import { invoke } from '@tauri-apps/api/tauri';
+
+const settings = localStorage.getItem('settings');
+if (settings) {
+    invoke('save_settings', { settings })
+        .then(() => console.log('Settings saved successfully'))
+        .catch((error) => console.error('Error saving settings:', error));
+}
+
 const queryClient = new QueryClient();
 
 // Uncomment to enable Sentry
@@ -34,7 +44,7 @@ root.render(
                 <App />
             </QueryClientProvider>
         </BrowserRouter>
-    </Provider>
+    </Provider>,
 );
 
 // If you want your app to work offline and load faster, you can change

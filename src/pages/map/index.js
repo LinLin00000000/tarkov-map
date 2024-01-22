@@ -34,6 +34,8 @@ import useStateWithLocalStorage from '../../hooks/useStateWithLocalStorage.jsx';
 
 import './index.css';
 
+import './customize.js'
+
 const showStaticMarkers = false;
 const showMarkersBounds = false;
 const showTestMarkers = false;
@@ -263,6 +265,9 @@ function addElevation(item, popup) {
 }
 
 function Map() {
+    const spp = (x, z) => dispatch(setPlayerPosition({position:{x, z}}))
+    window.spp = spp
+    
     let { currentMap } = useParams();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -513,12 +518,12 @@ function Map() {
         });
 
         map.layerControl = layerControl;
-        map.addControl(new L.Control.Fullscreen({
-            title: {
-                'false': tMaps('View Fullscreen'),
-                'true': tMaps('Exit Fullscreen'),
-            }
-        }));
+        // map.addControl(new L.Control.Fullscreen({
+        //     title: {
+        //         'false': tMaps('View Fullscreen'),
+        //         'true': tMaps('Exit Fullscreen'),
+        //     }
+        // }));
 
         L.control.coordinates({
             decimals: 2,
@@ -546,6 +551,9 @@ function Map() {
             playersLabel: t('Players'),
             bylabel: t('By'),
         }).addTo(map);
+        // L.control.selectMap({
+        //     position: 'topleft',
+        // }).addTo(map);
 
         //L.control.scale({position: 'bottomright'}).addTo(map);
         
@@ -1435,7 +1443,7 @@ function Map() {
         }
 
         // Add player position
-        if (playerPosition && (playerPosition.map === mapData.key || playerPosition.map === null)) {
+        if (playerPosition && (playerPosition.map === mapData.key || playerPosition.map === null || playerPosition.map === undefined)) {
             const positionLayer = L.layerGroup();
             const playerIcon = L.AwesomeMarkers.icon({
                 icon: 'person-running',

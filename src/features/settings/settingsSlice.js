@@ -115,7 +115,7 @@ const settingsSlice = createSlice({
         completedQuests: [],
         useTarkovTracker: localStorageReadJson('useTarkovTracker', false),
         tarkovTrackerModules: [],
-        hideRemoteControl: localStorageReadJson('hide-remote-control', false),
+        hideRemoteControl: localStorageReadJson('hide-remote-control', true),
         minDogtagLevel: localStorageReadJson('minDogtagLevel', 1),
         hideDogtagBarters: localStorageReadJson('hideDogtagBarters', false),
         playerPosition: localStorageReadJson('playerPosition', null),

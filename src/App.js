@@ -294,22 +294,22 @@ function App() {
                 ))}
             </Helmet>
             <Menu />
-            <CookieConsent>
+            {/* <CookieConsent>
                 tarkov.dev uses cookies to enhance your experience. By continuing to use this site, you agree to the usage of cookies. Cookies are used to remember your settings and features that you enable.
-            </CookieConsent>
+            </CookieConsent> */}
             <ErrorBoundary FallbackComponent={Fallback}>
                 <Routes>
                     <Route
                         path={'/'}
                         key="start-route"
                         element={[
-                            <Suspense fallback={<Loading />} key="suspense-start-wrapper">
-                                <Start key="start-wrapper" />
+                            <Suspense fallback={<Loading />} key="suspense-maps-wrapper">
+                                <Maps key="maps-wrapper" />
                             </Suspense>,
                             remoteControlSessionElement,
                         ]}
                     />
-                    <Route
+                    {/* <Route
                         path={'/ammo'}
                         key="ammo-route"
                         element={[
@@ -328,7 +328,7 @@ function App() {
                             </Suspense>,
                             remoteControlSessionElement,
                         ]}
-                    />
+                    /> */}
                     <Route
                         path={'/maps/'}
                         key="maps-route"
@@ -349,7 +349,7 @@ function App() {
                             remoteControlSessionElement,
                         ]}
                     />
-                    <Route
+                    {/* <Route
                         path={'/loot-tier'}
                         key="loot-tier-route"
                         element={[
@@ -859,7 +859,7 @@ function App() {
                             </Suspense>,
                             remoteControlSessionElement,
                         ]}
-                    />
+                    /> */}
                     <Route
                         path="*"
                         element={[
@@ -871,7 +871,7 @@ function App() {
                     />
                 </Routes>
             </ErrorBoundary>
-            <Footer />
+            {/* <Footer /> */}
         </div>
     );
 }
