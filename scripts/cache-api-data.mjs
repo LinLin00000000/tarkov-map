@@ -11,7 +11,7 @@ import doFetchQuests from '../src/features/quests/do-fetch-quests.mjs';
 import doFetchBosses from '../src/features/bosses/do-fetch-bosses.mjs';
 import graphqlRequest from '../src/modules/graphql-request.mjs';
 
-process.exit(0);
+// process.exit(0);
 
 async function getLanguageCodes() {
     const query = `{
