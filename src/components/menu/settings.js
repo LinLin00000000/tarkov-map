@@ -63,7 +63,7 @@ const Settings = ({ closeModal }) => {
     }, []);
 
     // 保存设置
-    const saveSettings = () => {
+    const saveSettings = async () => {
         const settings = {
             auto_delete_screenshot: autoDeleteScreenshot,
             auto_maximize_minimize: autoMaximizeMinimize,
@@ -79,8 +79,8 @@ const Settings = ({ closeModal }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        saveSettings();
         closeModal();
+        await saveSettings();
     };
 
     return (
@@ -98,7 +98,7 @@ const Settings = ({ closeModal }) => {
                         checked={autoMaximizeMinimize}
                         onChange={(e) => setAutoMaximizeMinimize(e.target.checked)}
                     />
-                    自动最大化最小化
+                    根据截图出现自动最小化
                 </StyledCheckboxLabel>
                 <StyledLabel htmlFor="shortcut-key">设置最小化快捷键:</StyledLabel>
                 <StyledInput

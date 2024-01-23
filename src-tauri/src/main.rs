@@ -3,9 +3,10 @@
 
 mod file_watcher;
 
+use rdev::{listen, Event, EventType, Key};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use tauri::State;
+use tauri::{Manager, State};
 
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct Settings {
@@ -45,9 +46,42 @@ async fn main() {
         .invoke_handler(tauri::generate_handler![save_settings])
         .setup(|app| {
             let app_handle = app.handle();
-            // 在单独的线程中处理文件系统事件
             tokio::spawn(async move {
                 file_watcher::handle_file_events(app_handle).await;
+            });
+
+            let app_handle = app.handle();
+            tokio::spawn(async move {
+                if let Err(error) = listen(move |event| {
+                    let settings_state = app_handle.state::<Mutex<Settings>>();
+                    let settings = settings_state.lock().unwrap();
+                    let shortcut_key = settings.shortcut_key.clone();
+                    if !shortcut_key.is_empty() {
+                        match event.event_type {
+                            EventType::KeyPress(key) => {
+                                // println!("按下了 {:?} 键", key);
+                                if format!("{:?}", key).to_lowercase()
+                                    == shortcut_key.trim().to_lowercase()
+                                {
+                                    // println!("按下了指定快捷键");
+                                    if let Some(main_window) = app_handle.get_window("main") {
+                                        let is_minimized = main_window.is_minimized().unwrap();
+                                        if is_minimized {
+                                            main_window.set_always_on_top(true).unwrap();
+                                            main_window.unminimize().unwrap();
+                                            main_window.set_always_on_top(false).unwrap();
+                                        } else {
+                                            main_window.minimize().unwrap();
+                                        }
+                                    }
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }) {
+                    println!("Error: {:?}", error)
+                }
             });
 
             Ok(())
