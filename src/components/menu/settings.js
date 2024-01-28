@@ -101,6 +101,7 @@ const Settings = ({ closeModal }) => {
                     根据截图出现自动最小化
                 </StyledCheckboxLabel>
                 <StyledLabel htmlFor="shortcut-key">设置最小化快捷键:</StyledLabel>
+                {/* See https://docs.rs/rdev/latest/rdev/enum.Key.html */}
                 <StyledInput
                     type="text"
                     id="shortcut-key"
