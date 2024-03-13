@@ -48,6 +48,7 @@ const SubmitButton = styled.button`
 
 const Settings = ({ closeModal }) => {
     const [autoDeleteScreenshot, setAutoDeleteScreenshot] = useState(true);
+    const [autoScreenshotByKeyWRelease, setAutoScreenshotByKeyWRelease] = useState(false);
     const [autoMaximizeMinimize, setAutoMaximizeMinimize] = useState(false);
     const [autoAppearedByShortcutKey, setAutoAppearedByShortcutKey] = useState(false);
     const [shortcutKey, setShortcutKey] = useState('');
@@ -58,6 +59,7 @@ const Settings = ({ closeModal }) => {
         if (savedSettings) {
             const settings = JSON.parse(savedSettings);
             setAutoDeleteScreenshot(settings.auto_delete_screenshot);
+            setAutoScreenshotByKeyWRelease(settings.auto_screenshot_by_key_w_release);
             setAutoMaximizeMinimize(settings.auto_maximize_minimize);
             setAutoAppearedByShortcutKey(settings.auto_appeared_by_shortcut_key);
             setShortcutKey(settings.shortcut_key);
@@ -68,6 +70,7 @@ const Settings = ({ closeModal }) => {
     const saveSettings = async () => {
         const settings = {
             auto_delete_screenshot: autoDeleteScreenshot,
+            auto_screenshot_by_key_w_release: autoScreenshotByKeyWRelease,
             auto_maximize_minimize: autoMaximizeMinimize,
             auto_appeared_by_shortcut_key: autoAppearedByShortcutKey,
             shortcut_key: shortcutKey,
@@ -98,6 +101,13 @@ const Settings = ({ closeModal }) => {
                 </StyledCheckboxLabel>
                 <StyledCheckboxLabel>
                     <StyledCheckbox
+                        checked={autoScreenshotByKeyWRelease}
+                        onChange={(e) => setAutoScreenshotByKeyWRelease(e.target.checked)}
+                    />
+                    W键松开自动截图
+                </StyledCheckboxLabel>
+                <StyledCheckboxLabel>
+                    <StyledCheckbox
                         checked={autoMaximizeMinimize}
                         onChange={(e) => setAutoMaximizeMinimize(e.target.checked)}
                     />
@@ -112,6 +122,7 @@ const Settings = ({ closeModal }) => {
                 </StyledCheckboxLabel>
                 <StyledLabel htmlFor="shortcut-key">游戏设置的截图快捷键:</StyledLabel>
                 {/* See https://docs.rs/rdev/latest/rdev/enum.Key.html */}
+                <span>(Tip: https://docs.rs/rdev/latest/rdev/enum.Key.html)</span>
                 <StyledInput
                     type="text"
                     id="shortcut-key"

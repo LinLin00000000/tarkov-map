@@ -56,7 +56,7 @@ pub async fn handle_file_events(app_handle: AppHandle) {
                     let settings_lock = app_handle.state::<Mutex<Settings>>();
                     let settings = settings_lock.lock().unwrap();
 
-                    if settings.auto_maximize_minimize {
+                    if settings.auto_maximize_minimize.unwrap_or_default() {
                         if let Some(main_window) = app_handle.get_window("main") {
                             // main_window.set_always_on_top(true).unwrap();
                             let is_minimized = main_window.is_minimized().unwrap();
@@ -70,7 +70,7 @@ pub async fn handle_file_events(app_handle: AppHandle) {
                         }
                     }
 
-                    if settings.auto_delete_screenshot {
+                    if settings.auto_delete_screenshot.unwrap_or_default() {
                         let path_clone = paths[0].clone();
                         println!("准备删除文件: {:?}", path_clone);
                         rt_delete.spawn(async move {
