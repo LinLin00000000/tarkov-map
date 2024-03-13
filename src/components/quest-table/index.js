@@ -19,7 +19,7 @@ import './index.css';
 
 export function getRequiredQuestItems(quest, itemFilter = false) {
     const requiredItems = [];
-    const addItem = (item, count = 1, foundInRaid = false) => {
+    const addItem = (item, count = 1, foundInRaid = false, alternates = false) => {
         if (itemFilter && item.id !== itemFilter) {
             return;
         }
@@ -28,15 +28,19 @@ export function getRequiredQuestItems(quest, itemFilter = false) {
             req = {
                 item: item,
                 count: 0,
-                foundInRaid: foundInRaid
+                foundInRaid: foundInRaid,
+                alternates: alternates
             };
             requiredItems.push(req);
         }
         req.count += count;
     };
     quest.objectives.forEach((objectiveData) => {
-        if (objectiveData.item?.id && objectiveData.type !== 'findItem') {
-            addItem(objectiveData.item, objectiveData.count || 1, objectiveData.foundInRaid);
+        if (objectiveData.items && objectiveData.type !== 'findItem') {
+            const alternates = objectiveData.items.length > 1;
+            for (const objItem of objectiveData.items) {
+                addItem(objItem, objectiveData.count || 1, objectiveData.foundInRaid, alternates);
+            }
         }
         if (objectiveData.markerItem?.id) {
             addItem(objectiveData.markerItem);
@@ -246,27 +250,17 @@ function QuestTable({
 
             let completedPassed = true;
             if (hideCompleted) {
-                completedPassed = !settings.completedQuests.some(taskId => taskId === quest.id);
+                completedPassed = !settings.completedQuests.includes(quest.id) && !settings.failedQuests.includes(quest.id);
             }
 
             let lockedPassed = true;
             if (hideLocked) {
-                for (const req of quest.traderRequirements.filter(req => req.requirementType === 'level')) {
-                    const trader = traders.find(t => t.id === req.trader.id);
-                    if (settings[trader.normalizedName] < req.value) {
-                        lockedPassed = false;
-                        break;
-                    }
+                lockedPassed = quest.active;
+                if (!hideCompleted && !quest.active) {
+                    lockedPassed = settings.completedQuests.includes(quest.id) || settings.failedQuests.includes(quest.id);
                 }
-                for (const req of quest.taskRequirements) {
-                    const questReq = allQuestData.find(q => q.id === req.task.id);
-                    if (req.status.includes('complete')) {
-                        const isComplete = settings.completedQuests.some(taskId => taskId === questReq.id);
-                        if (!isComplete) {
-                            lockedPassed = false;
-                            break;
-                        }
-                    }
+                if (settings.playerLevel < quest.minPlayerLevel) {
+                    lockedPassed = false;
                 }
             }
 
@@ -275,7 +269,6 @@ function QuestTable({
     }, [
         settings,
         allQuestData,
-        traders,
         hideCompleted,
         hideLocked,
     ]);
@@ -368,7 +361,7 @@ function QuestTable({
                         if (!reqQuest)
                             return null;
                         let completedIcon = '';
-                        if (req.status.includes('complete') && settings.completedQuests.includes(questData.id)) {
+                        if (req.status.includes('complete') && settings.completedQuests.includes(req.task.id)) {
                             completedIcon = (
                                 <Icon
                                     path={mdiClipboardCheck}
@@ -377,7 +370,16 @@ function QuestTable({
                                 />
                             );
                         }
-                        if (req.status.length === 1 && req.status[0] === 'active' && settings.completedQuests.includes(questData.id)) {
+                        if (completedIcon === '' && req.status.includes('failed') && settings.failedQuests.includes(req.task.id)) {
+                            completedIcon = (
+                                <Icon
+                                    path={mdiClipboardCheck}
+                                    size={0.75}
+                                    className="icon-with-text"
+                                />
+                            );
+                        }
+                        if (completedIcon === '' && req.status.length === 1 && req.status[0] === 'active' && (settings.completedQuests.includes(req.task.id) || settings.failedQuests.includes(req.task.id))) {
                             completedIcon = (
                                 <Icon
                                     path={mdiClipboardRemove}

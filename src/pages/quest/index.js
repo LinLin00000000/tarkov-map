@@ -19,6 +19,7 @@ import useQuestsData from '../../features/quests/index.js';
 import useTradersData from '../../features/traders/index.js';
 import useItemsData from '../../features/items/index.js';
 import useMapsData from '../../features/maps/index.js';
+import useHideoutData from '../../features/hideout/index.js';
 
 import './index.css';
 
@@ -55,6 +56,8 @@ function Quest() {
     const { data: maps } = useMapsData();
 
     const { data: quests, status: questsStatus } = useQuestsData();
+
+    const { data: stations } = useHideoutData();
 
     let currentQuest = useMemo(() => {
         return quests.find((quest) => {
@@ -174,6 +177,17 @@ function Quest() {
             (req) => req.task.id === currentQuest.id && (!req.status.includes('active') || (req.status.length === 2 && req.status.includes('complete') && req.status.includes('active'))),
         ),
     );
+
+    let completedIcon = '';
+    if (settings.completedQuests.includes(currentQuest.id)) {
+        completedIcon = (
+            <Icon
+                path={mdiClipboardCheck}
+                size={1.2}
+                className="icon-with-text"
+            />
+        );
+    }
 
     let requirementsChunk = '';
     if (
@@ -428,17 +442,37 @@ function Quest() {
             );
         }
         if (objective.type === 'giveItem' || objective.type === 'findItem') {
-            let item = items.find((i) => i.id === objective.item.id);
-            if (!item)
+            let itemElements = [];
+            let countElement = '';
+            for (const objItem of objective.items) {
+                let item = items.find((i) => i.id === objItem.id);
+                if (!item)
+                    continue;
+                if (item.properties?.defaultPreset) {
+                    const preset = items.find(i => i.id === item.properties.defaultPreset.id);
+                    item = {
+                        ...item,
+                        baseImageLink: preset.baseImageLink,
+                        width: preset.width,
+                        height: preset.height,
+                    };
+                }
+                itemElements.push(
+                    <ItemImage
+                        key={item.id}
+                        item={item}
+                        imageField="baseImageLink"
+                        linkToItem={true}
+                        count={objective.count > 1 && objective.items.length === 1 ? objective.count : false}
+                        isFIR={objective.foundInRaid}
+                    />
+                );
+            }
+            if (itemElements.length < 1) {
                 return null;
-            if (item.properties?.defaultPreset) {
-                const preset = items.find(i => i.id === item.properties.defaultPreset.id);
-                item = {
-                    ...item,
-                    baseImageLink: preset.baseImageLink,
-                    width: preset.width,
-                    height: preset.height,
-                };
+            }
+            if (itemElements.length > 1 && objective.count > 1) {
+                countElement = <div>{t('{{itemCount}}x any of', {itemCount: objective.count})}:</div>;
             }
             const attributes = [];
             if (objective.dogTagLevel) {
@@ -462,13 +496,17 @@ function Quest() {
             taskDetails = (
                 <>
                     <>
-                    <ItemImage
-                        item={item}
-                        imageField="baseImageLink"
-                        linkToItem={true}
-                        count={objective.count > 1 ? objective.count : false}
-                        isFIR={objective.foundInRaid}
-                    />
+                        {countElement}
+                        <ul className="quest-item-list">
+                        {itemElements.map((el, i) => 
+                            <li
+                                key={`objective-item-${i}`}
+                                className={'quest-list-item'}
+                            >
+                                {el}
+                            </li>
+                        )}
+                        </ul>
                     </>
                     {attributes.length > 0 && (
                         <ul>
@@ -502,7 +540,7 @@ function Quest() {
             );
         }
         if (objective.type === 'plantItem') {
-            let item = items.find((i) => i.id === objective.item.id);
+            let item = items.find((i) => i.id === objective.items[0].id);
             if (!item)
                 return null;
             if (item.properties?.defaultPreset) {
@@ -538,12 +576,12 @@ function Quest() {
                     <>
                         {shootString}
                     </>
-                    {objective.timeFromHour && (
+                    {objective.timeFromHour !== objective.timeUntilHour && (
                         <div>
                             {t('During hours: {{hourStart}}:00 to {{hourEnd}}:00', {hourStart: objective.timeFromHour, hourEnd: objective.timeUntilHour})}
                         </div>
                     )}
-                    {objective.distance && (
+                    {objective.distance > 0 && (
                         <div>
                             {t('From distance: {{operator}} {{count}} meters', {
                                 operator: objective.distance.compareMethod,
@@ -802,6 +840,11 @@ function Quest() {
                 </div>
             );
         }
+        if (objective.type === 'playerLevel') {
+            taskDetails = <div>
+                {t('Reach level {{playerLevel}}', {playerLevel: objective.playerLevel})}
+            </div>
+        }
         let objectiveDescription = null;
         if (objective.description) {
             objectiveDescription = <h3>{`✔️ ${objective.description} ${objective.optional ? `(${t('optional')})` : ''}`}</h3>;
@@ -942,7 +985,32 @@ function Quest() {
                     })}
                 </ul>
             </div>
-        )];
+        ),
+        rewards.craftUnlock?.length > 0 && (
+            <div key="reward-craft">
+                <h3>{t('Craft Unlock')}</h3>
+                <ul className="quest-item-list">
+                    {rewards.craftUnlock.map((unlock, index) => {
+                        const station = stations.find((s) => s.id === unlock.station.id);
+                        const item = items.find((i) => i.id === unlock.rewardItems[0].item.id);
+                        if (!item)
+                            return null;
+                        return (
+                            <li className="quest-list-item" key={`${unlock.rewardItems[0].item.id}-${index}`}>
+                                <ItemImage
+                                    key={`reward-index-${item.id}-${index}`}
+                                    item={item}
+                                    imageField="baseImageLink"
+                                    linkToItem={true}
+                                    station={station}
+                                    count={unlock.level}
+                                />
+                            </li>
+                        );
+                    })}
+                </ul>
+            </div>
+        ),];
     };
 
     return [
@@ -958,13 +1026,14 @@ function Quest() {
                 <div className="quest-information-grid">
                     <div className="quest-information-wrapper">
                         <h1>
-                            <div className={'quest-font'}>
+                            <span className={'quest-font'}>
                                 {!currentQuest.loading
                                     ? (currentQuest.name)
                                     : (<LoadingSmall />)
                                 }
                                 {currentQuest.factionName === 'Any' ? '' : ` (${currentQuest.factionName})`}
-                            </div>
+                            </span>
+                            {completedIcon}
                             <img
                                 alt={currentQuest.trader.name}
                                 className={'quest-icon'}
@@ -1013,6 +1082,16 @@ function Quest() {
                             if (status.length === 1 && status[0] === 'failed') {
                                 failNote = t('(on failure)');
                             }
+                            let completedIcon = '';
+                            if (settings.completedQuests.includes(currentQuest.id)) {
+                                completedIcon = (
+                                    <Icon
+                                        path={mdiClipboardCheck}
+                                        size={1}
+                                        className="icon-with-text"
+                                    />
+                                );
+                            }
                             return (
                                 <div key={`req-task-${task.id}`}>
                                     <Icon
@@ -1022,6 +1101,7 @@ function Quest() {
                                     />
                                     <Link to={`/task/${task.normalizedName}`}>{task.name}</Link>{' '}
                                     {failNote}
+                                    {completedIcon}
                                 </div>
                             );
                         })}

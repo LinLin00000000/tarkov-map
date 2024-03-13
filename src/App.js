@@ -75,6 +75,9 @@ const Trader = React.lazy(() => import('./pages/trader/index.js'));
 const ItemTracker = React.lazy(() => import('./pages/item-tracker/index.js'));
 const Hideout = React.lazy(() => import('./pages/hideout/index.js'));
 const WipeLength = React.lazy(() => import('./pages/wipe-length/index.js'));
+const Achievements = React.lazy(() => import('./pages/achievements/index.js'));
+const Players = React.lazy(() => import('./pages/players/index.js'));
+const Player = React.lazy(() => import('./pages/player/index.js'));
 const About = React.lazy(() => import('./pages/about/index.js'));
 
 const APIDocs = React.lazy(() => import('./pages/api-docs/index.js'));
@@ -206,7 +209,7 @@ function App() {
 
             socket.addEventListener('open', () => {
                 console.log('Connected to socket server');
-                console.log(socket);
+                //console.log(socket);
 
                 heartbeat();
 
@@ -860,6 +863,36 @@ function App() {
                             remoteControlSessionElement,
                         ]}
                     /> */}
+                    <Route
+                        path={'/achievements'}
+                        key="achievements-route"
+                        element={[
+                            <Suspense fallback={<Loading />} key="suspense-achievements-wrapper">
+                                <Achievements key="achievements-wrapper" />
+                            </Suspense>,
+                            remoteControlSessionElement,
+                        ]}
+                    />
+                    <Route
+                        path={'/players'}
+                        key="players-route"
+                        element={[
+                            <Suspense fallback={<Loading />} key="suspense-players-wrapper">
+                                <Players key="players-wrapper" />
+                            </Suspense>,
+                            remoteControlSessionElement,
+                        ]}
+                    />
+                    <Route
+                        path="/player/:accountId"
+                        key="player-route"
+                        element={[
+                            <Suspense fallback={<Loading />} key="suspense-player-wrapper">
+                                <Player />
+                            </Suspense>,
+                            remoteControlSessionElement,
+                        ]}
+                    />
                     <Route
                         path="*"
                         element={[

@@ -1,7 +1,7 @@
 import graphqlRequest from '../../modules/graphql-request.mjs';
 
 export default async function doFetchTraders(language, prebuild = false) {
-    const query = `{
+    const query = `query TarkovDevTraders {
         traders(lang: ${language}) {
             id
             name
@@ -24,6 +24,9 @@ export default async function doFetchTraders(language, prebuild = false) {
                 payRate
                 insuranceRate
                 repairCostMultiplier
+            }
+            barters {
+                id
             }
         }
     }`;

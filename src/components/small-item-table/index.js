@@ -32,6 +32,7 @@ import itemCanContain from '../../modules/item-can-contain.js';
 import useBartersData from '../../features/barters/index.js';
 import useCraftsData from '../../features/crafts/index.js';
 import useItemsData from '../../features/items/index.js';
+import useHideoutData from '../../features/hideout/index.js';
 import useMetaData from '../../features/meta/index.js';
 import CanvasGrid from '../../components/canvas-grid/index.js';
 
@@ -318,6 +319,8 @@ function SmallItemTable(props) {
 
     const { data: crafts } = useCraftsData();
 
+    const { data: hideout } = useHideoutData();
+
     const containedItems = useMemo(() => {
         if (!containedInFilter) 
             return {};
@@ -351,6 +354,8 @@ function SmallItemTable(props) {
                     if (!showAllSources && settings[buyFor.vendor.normalizedName] < buyFor.vendor.minTraderLevel) 
                         return false;
                     if (!showAllSources && settings.useTarkovTracker && buyFor.vendor.taskUnlock && !settings.completedQuests.includes(buyFor.vendor.taskUnlock.id)) 
+                        return false;
+                    if (buyFor.vendor.normalizedName === 'flea-market' && traderValue && traderBuyback && itemData.types.includes('preset'))
                         return false;
                     return true;
                 }),
@@ -839,7 +844,9 @@ function SmallItemTable(props) {
         useBarterIngredients,
         useCraftIngredients,
         minPenetration,
-        maxPenetration
+        maxPenetration,
+        traderValue,
+        traderBuyback,
     ]);
     const lowHydrationCost = useMemo(() => {
         if (!totalEnergyCost && !provisionValue) {
@@ -1667,7 +1674,8 @@ function SmallItemTable(props) {
                             );
                         } else if (cheapestObtainInfo.craft) {
                             const craft = cheapestObtainInfo.craft;
-                            priceSource = `${craft.station.name} ${craft.level}`;
+                            const station = hideout.find(s => s.id === craft.station.id);
+                            priceSource = `${station.name} ${craft.level}`;
                             let barterTipTitle = '';
                             if (craft.taskUnlock) {
                                 taskIcon = (
@@ -1863,6 +1871,7 @@ function SmallItemTable(props) {
         items,
         barters,
         crafts,
+        hideout,
         useBarterIngredients,
         useCraftIngredients,
         distance,

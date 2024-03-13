@@ -1,11 +1,12 @@
 import graphqlRequest from '../../modules/graphql-request.mjs';
 
 const doFetchHideout = async (language, prebuild = false) => {
-    const query = `{
+    const query = `query TarkovDevHideout {
         hideoutStations(lang: ${language}) {
             id
             name
             normalizedName
+            imageLink
             levels {
                 id
                 level
@@ -31,6 +32,9 @@ const doFetchHideout = async (language, prebuild = false) => {
                     }
                     level
                 }
+            }
+            crafts {
+                id
             }
         }
     }`;

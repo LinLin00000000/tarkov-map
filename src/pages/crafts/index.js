@@ -5,7 +5,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { Icon } from '@mdi/react';
 import { mdiProgressWrench, mdiCancel, mdiCached } from '@mdi/js';
 
-import useCraftsData from '../../features/crafts/index.js';
+import useHideoutData from '../../features/hideout/index.js';
 
 import useStateWithLocalStorage from '../../hooks/useStateWithLocalStorage.jsx';
 
@@ -47,24 +47,23 @@ function Crafts() {
 
     useEffect(() => {
         setNameFilter(searchParams.get('search') || '');
-    }, [searchParams]);
+        const station = searchParams.get('station');
+        if (station) {
+            setSelectedStation(station);
+        }
+        const all = searchParams.get('all');
+        if (all) {
+            setShowAll(all === 'true');
+        }
+    }, [searchParams, setSelectedStation, setShowAll]);
 
-    const { data: crafts } = useCraftsData();
+    const { data: hideout } = useHideoutData();
     
     const stations = useMemo(() => {
-        const stn = [];
-        for (const craft of crafts) {
-            if (craft.station.normalizedName === 'bitcoin-farm') {
-                continue;
-            }
-            if (!stn.some(station => station.id === craft.station.id)) {
-                stn.push(craft.station);
-            }
-        }
-        return stn.sort((a, b) => {
+        return hideout.filter(s => s.crafts?.length && s.normalizedName !== 'bitcoin-farm').sort((a, b) => {
             return a.name.localeCompare(b.name);
         });
-    }, [crafts]);
+    }, [hideout]);
 
     return [
         <SEO 
@@ -82,7 +81,7 @@ function Crafts() {
                     <ToggleFilter
                         checked={showAll}
                         label={t('Ignore settings')}
-                        onChange={(e) => setShowAll(!showAll)}
+                        onChange={(e) => setSearchParams({'all': `${!showAll}`})}
                         tooltipContent={
                             <>
                                 {t('Shows all crafts regardless of your settings')}
@@ -114,12 +113,10 @@ function Crafts() {
                                         <img
                                             alt={station.name}
                                             loading="lazy"
-                                            src={`${process.env.PUBLIC_URL}/images/stations/${station.normalizedName}-icon.png`}
+                                            src={station.imageLink}
                                         />
                                     }
-                                    onClick={setSelectedStation.bind(
-                                        undefined,
-                                        station.normalizedName)}
+                                    onClick={() => {setSearchParams({'station': station.normalizedName})}}
                                 />
                             );
                         })}
@@ -131,7 +128,7 @@ function Crafts() {
                             }
                             selected={selectedStation === 'top'}
                             content={t('Best')}
-                            onClick={setSelectedStation.bind(undefined, 'top')}
+                            onClick={() => {setSearchParams({'station': 'top'})}}
                         />
                         <ButtonGroupFilterButton
                             tooltipContent={
@@ -141,7 +138,7 @@ function Crafts() {
                             }
                             selected={selectedStation === 'banned'}
                             content={<Icon path={mdiCancel} size={1} className="icon-with-text"/>}
-                            onClick={setSelectedStation.bind(undefined, 'banned')}
+                            onClick={() => {setSearchParams({'station': 'banned'})}}
                         />
                     </ButtonGroupFilter>
                     <ButtonGroupFilter>
