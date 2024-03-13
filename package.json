@@ -32,7 +32,7 @@
     "dependencies": {
         "@tauri-apps/api": "^1.5.3",
         "@emotion/styled": "^11.11.0",
-        "@mdi/js": "^6.9.96",
+        "@mdi/js": "^7.4.47",
         "@mdi/react": "^1.6.1",
         "@mui/lab": "^5.0.0-alpha.166",
         "@mui/material": "^5.15.11",
@@ -42,7 +42,7 @@
         "@testing-library/react": "^14.2.1",
         "@tippyjs/react": "^4.2.6",
         "classnames": "^2.5.1",
-        "critical": "^6.0.5",
+        "critical": "^7.1.0",
         "cross-fetch": "^4.0.0",
         "dayjs": "^1.11.10",
         "fast-deep-equal": "^3.1.3",
