@@ -49,6 +49,7 @@ const SubmitButton = styled.button`
 const Settings = ({ closeModal }) => {
     const [autoDeleteScreenshot, setAutoDeleteScreenshot] = useState(true);
     const [autoMaximizeMinimize, setAutoMaximizeMinimize] = useState(false);
+    const [autoAppearedByShortcutKey, setAutoAppearedByShortcutKey] = useState(false);
     const [shortcutKey, setShortcutKey] = useState('');
 
     // 加载时获取设置
@@ -58,6 +59,7 @@ const Settings = ({ closeModal }) => {
             const settings = JSON.parse(savedSettings);
             setAutoDeleteScreenshot(settings.auto_delete_screenshot);
             setAutoMaximizeMinimize(settings.auto_maximize_minimize);
+            setAutoAppearedByShortcutKey(settings.auto_appeared_by_shortcut_key);
             setShortcutKey(settings.shortcut_key);
         }
     }, []);
@@ -67,6 +69,7 @@ const Settings = ({ closeModal }) => {
         const settings = {
             auto_delete_screenshot: autoDeleteScreenshot,
             auto_maximize_minimize: autoMaximizeMinimize,
+            auto_appeared_by_shortcut_key: autoAppearedByShortcutKey,
             shortcut_key: shortcutKey,
         };
 
@@ -100,7 +103,14 @@ const Settings = ({ closeModal }) => {
                     />
                     根据截图出现自动最小化
                 </StyledCheckboxLabel>
-                <StyledLabel htmlFor="shortcut-key">设置最小化快捷键:</StyledLabel>
+                <StyledCheckboxLabel>
+                    <StyledCheckbox
+                        checked={autoAppearedByShortcutKey}
+                        onChange={(e) => setAutoAppearedByShortcutKey(e.target.checked)}
+                    />
+                    使用截图快捷键自动最小化
+                </StyledCheckboxLabel>
+                <StyledLabel htmlFor="shortcut-key">游戏设置的截图快捷键:</StyledLabel>
                 {/* See https://docs.rs/rdev/latest/rdev/enum.Key.html */}
                 <StyledInput
                     type="text"

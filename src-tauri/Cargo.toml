@@ -21,7 +21,18 @@ tauri = { version = "1.5.4", features = [] }
 notify = "6.1.1"
 tokio = { version = "1.35.1", features = ["full"] }
 rdev = "0.5.3"
-strum = { version = "0.25", features = ["derive"] }
+strum = { version = "0.26.2", features = ["derive"] }
+rand = "0.8.3"
+
+[dependencies.windows]
+version = "0.54"
+features = [
+    "Data_Xml_Dom",
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
+]
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
