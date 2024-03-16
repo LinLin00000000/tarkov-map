@@ -49,6 +49,12 @@ function getDHMS(seconds) {
     }
 }
 
+const raritySort = {
+    "common": 0,
+    "rare": 1,
+    "legendary": 2
+}
+
 function Player() {
     const { t } = useTranslation();
     const params = useParams();
@@ -163,21 +169,17 @@ function Player() {
         () => [
             {
                 Header: () => (
-                    <div
-                      style={{
-                        textAlign:'left'
-                      }}
-                    >{t('Name')}</div>),
+                    <div style={{textAlign:'left', paddingLeft:'10px'}}>
+                        {t('Name')}
+                    </div>),
                 id: 'name',
                 accessor: 'name',
             },
             {
                 Header: () => (
-                    <div
-                      style={{
-                        textAlign:'left'
-                      }}
-                    >{t('Description')}</div>),
+                    <div style={{textAlign:'left', paddingLeft:'10px'}}>
+                        {t('Description')}
+                    </div>),
                 id: 'description',
                 accessor: 'description',
             },
@@ -203,6 +205,26 @@ function Player() {
                             {new Date(props.value * 1000).toLocaleString()}
                         </div>
                     );
+                },
+            },
+            {
+                Header: t('Rarity'),
+                id: 'rarity',
+                accessor: 'rarity',
+                Cell: (props) => {
+                    return (
+                        <div className={`center-content ${props.row.original.normalizedRarity}`}>
+                            {props.value}
+                        </div>
+                    );
+                },
+                sortType: (rowA, rowB) => {
+                    let rowAr = raritySort[rowA.original.normalizedRarity];
+                    let rowBr = raritySort[rowB.original.normalizedRarity];
+                    if (rowAr === rowBr) {
+                        return rowB.original.playersCompletedPercent - rowA.original.playersCompletedPercent
+                    }
+                    return rowAr - rowBr;
                 },
             },
         ],
@@ -428,6 +450,36 @@ function Player() {
         }).filter(Boolean) || [];
     }, [playerData]);
 
+    const masteringColumns = useMemo(
+        () => [
+            {
+                Header: (
+                    <div style={{textAlign:'left', paddingLeft:'10px'}}>
+                        {t('Weapon')}
+                    </div>
+                ),
+                id: 'Id',
+                accessor: 'Id',
+                Cell: (props) => {
+                    return props.value;
+                },
+            },
+            {
+                Header: (
+                    <div style={{textAlign:'left', paddingLeft:'10px'}}>
+                        {t('Progress')}
+                    </div>
+                ),
+                id: 'Progress',
+                accessor: 'Progress',
+                Cell: (props) => {
+                    return props.value;
+                },
+            },
+        ],
+        [t],
+    );
+
     const totalSecondsInGame = useMemo(() => {
         return playerData.pmcStats?.eft?.totalInGameTime || 0;
     }, [playerData]);
@@ -471,8 +523,13 @@ function Player() {
         }
         if (loadoutItem.upd?.Key) {
             const key = items.find(i => i.id === loadoutItem._tpl);
-            if (key && key.properties.uses) {
-                countLabel = `${key.properties.uses-loadoutItem.upd.Key.NumberOfUsages}/${key.properties.uses}`;
+            if (key) {
+                if (key.properties.uses) {
+                    countLabel = `${key.properties.uses-loadoutItem.upd.Key.NumberOfUsages}/${key.properties.uses}`;
+                } else {
+                    countLabel = loadoutItem.upd.Key.NumberOfUsages;
+                }
+                
             }
         }
         if (loadoutItem.upd?.Repairable) {
@@ -496,8 +553,9 @@ function Player() {
         return { image: itemImage, label };
     }, [items, t]);
 
-    const getLoadoutContents = useCallback((parentItem) => {
-        return playerData?.equipment?.Items.reduce((contents, loadoutItem) => {
+    const getLoadoutContents = useCallback((parentItem, itemType = 'loadout') => {
+        const itemSource = itemType === 'loadout' ? playerData?.equipment?.Items : playerData?.favoriteItems;
+        return itemSource?.reduce((contents, loadoutItem) => {
             if (loadoutItem.parentId !== parentItem._id) {
                 return contents;
             }
@@ -506,8 +564,8 @@ function Player() {
                 return contents;
             }
             contents.push((
-                <TreeItem key={`loadout-item-${loadoutItem._id}`} nodeId={loadoutItem._id} icon={itemDisplay.image} label={itemDisplay.label}>
-                    {getLoadoutContents(loadoutItem)}
+                <TreeItem key={`${itemType}-item-${loadoutItem._id}`} nodeId={loadoutItem._id} icon={itemDisplay.image} label={itemDisplay.label}>
+                    {getLoadoutContents(loadoutItem, itemType)}
                 </TreeItem>
             ));
             return contents;
@@ -516,19 +574,19 @@ function Player() {
 
     const getLoadoutInSlot = useCallback((slot) => {
         if (playerData?.equipment?.Id === undefined) {
-            return "None"
+            return "None";
         }
 
-        let loadoutRoot = playerData.equipment.Items.find(i => i._id === playerData.equipment.Id)
-        let loadoutItem = playerData.equipment.Items.find(i => i.slotId === slot && i.parentId === loadoutRoot._id)
+        let loadoutRoot = playerData.equipment.Items.find(i => i._id === playerData.equipment.Id);
+        let loadoutItem = playerData.equipment.Items.find(i => i.slotId === slot && i.parentId === loadoutRoot._id);
 
         if (loadoutItem === undefined) {
-            return "None"
+            return "None";
         }
 
-        let itemImage = undefined
-        let itemLabel = ''
-        let contents = []
+        let itemImage = undefined;
+        let itemLabel = '';
+        let contents = [];
         let itemDisplay = getItemDisplay(loadoutItem);
         if (itemDisplay) {
             itemImage = itemDisplay.image;
@@ -550,6 +608,42 @@ function Player() {
                     {contents}
                 </TreeView>
     }, [playerData, getItemDisplay, getLoadoutContents]);
+
+    const getFavoriteItems = useCallback(() => {
+        if (!playerData?.favoriteItems?.length) {
+            return '';
+        }
+        return ([
+            <h2 key="favorite-items-title"><Icon path={mdiTrophyAward} size={1.5} className="icon-with-text"/>{t('Favorite Items')}</h2>,
+            <ul key="favorite-items-content" className="favorite-item-list">
+                {playerData.favoriteItems.map(itemData => {
+                    if (itemData.parentId) {
+                        return false;
+                    }
+
+                    let itemImage = undefined;
+                    let itemLabel = '';
+                    let itemDisplay = getItemDisplay(itemData);
+                    if (itemDisplay) {
+                        itemImage = itemDisplay.image;
+                    }
+                    return (
+                        <li key={itemData._id}>
+                            <TreeView
+                                defaultExpandIcon={<Icon path={mdiChevronDown} size={1.5} className="icon-with-text"/>}
+                                defaultCollapseIcon={<Icon path={mdiChevronUp} size={1.5} className="icon-with-text"/>}
+                                defaultParentIcon={<span>***</span>}
+                            >
+                                <TreeItem key={`loadout-item-${itemData._id}`} nodeId={itemData._id} icon={itemImage} label={itemLabel}>
+                                    {getLoadoutContents(itemData, 'favorite')}
+                                </TreeItem>
+                            </TreeView>
+                        </li>
+                    );
+                }).filter(Boolean)}
+            </ul>
+        ])
+    }, [playerData, getItemDisplay, getLoadoutContents, t]);
 
     return [
         <SEO 
@@ -623,22 +717,7 @@ function Player() {
                         <div className="pouch">{getLoadoutInSlot('SecuredContainer')}</div>
                     </div>
                 </div>
-                {playerData?.favoriteItems?.length > 0 && ([
-                    <h2 key="favorite-items-title"><Icon path={mdiTrophyAward} size={1.5} className="icon-with-text"/>{t('Favorite Items')}</h2>,
-                    <ul key="favorite-items-content" className="favorite-item-list">
-                        {playerData.favoriteItems.map(itemData => {
-                            const imageDisplay = getItemDisplay(itemData, {linkToItem: true});
-                            if (!imageDisplay) {
-                                return false;
-                            }
-                            return (
-                                <li key={itemData._id}>
-                                    {imageDisplay.image}
-                                </li>
-                            );
-                        }).filter(Boolean)}
-                    </ul>
-                ])}
+                {getFavoriteItems()}
                 {playerData.skills?.Common?.length > 0 &&  ([
                     <h2 key="skills-title"><Icon path={mdiArmFlex} size={1.5} className="icon-with-text"/>{t('Skills')}</h2>,
                     <DataTable
@@ -649,16 +728,11 @@ function Player() {
                 ])}
                 {playerData.skills?.Mastering?.length > 0 &&  ([
                     <h2 key="mastering-title"><Icon path={mdiStarBox} size={1.5} className="icon-with-text"/>{t('Mastering')}</h2>,
-                    <ul key="mastering-list">
-                        {playerData.skills.Mastering.map(skillData => {
-                            if (skillData.Progress <= 1) {
-                                return false;
-                            }
-                            return (
-                                <li key={`skill-${skillData.Id}`}>{`${t(skillData.Id)}: ${skillData.Progress}`}</li>
-                            );
-                        }).filter(Boolean)}
-                    </ul>
+                    <DataTable
+                        key="skills-table"
+                        columns={masteringColumns}
+                        data={playerData.skills.Mastering}
+                    />,
                 ])}
             </div>
         </div>,
